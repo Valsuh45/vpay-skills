@@ -200,10 +200,31 @@ that difference as a capability, never as a rail code.
 | `Required`           | refuses a request **without** a payee                                                                                        | always `Some`          |
 | `Origin`             | refuses a request **carrying** one (accepting and dropping it would tell a merchant their nominated payee had been honoured) | always `None`          |
 
-Both rails vpay carries declare `Required` as of 2026-09-16, so the `Origin`
-arm ships with **no live example** — `no_shipping_rail_returns_a_refund_to_the_paying_instrument`
-in the conformance suite is what stops that premise changing quietly, and its
-assertion message lists the three things owed before it may be relaxed.
+Both rails vpay carries declare `Required`, so the `Origin` arm ships with
+**no shipping example**. Since 2026-10-17 (RFC-0010 § 7, delivery step 1) it
+has an integration guard instead of a census: two cases in
+`backends/tests/integration/tests/refunds.rs` drive `POST /v1/refunds` on an
+`Origin` rail that exists only in that test binary —
+`an_origin_rail_refuses_a_destination_through_the_route` (the `400`) and
+`a_refund_without_a_destination_succeeds_on_an_origin_rail_and_names_the_payment`
+(the accepting arm). The conformance case
+`every_shipping_rails_refund_destination_agrees_with_its_parser` states the
+rule — a `Required` rail overrides `parse_destination`, an `Origin` rail does
+not — and no longer asserts that no `Origin` rail ships. _(Until 2026-10-17
+that case was `no_shipping_rail_returns_a_refund_to_the_paying_instrument`,
+whose message listed those two cases and an RFC-0003 § 1 amendment as the
+price of relaxing it; all three were paid in the change that renamed it.)_
+
+**An `Origin` rail is told which payment it unwinds.** The refund
+`ChargeRef`'s `ref_extra` carries the charge's `provider_txn_id` under
+`vpay_api::v1::refunds::REFUND_PROVIDER_TXN_ID_KEY` (the string
+`provider_txn_id`), or nothing when the charge recorded none — the column is
+nullable, and a `Required` rail never needs it. A `Required` rail ignores the
+key; both shipping adapters do, and a `Required` adapter that reads it is a
+bug. An `Origin` adapter reads it and answers `ProviderError::Config` when it
+is missing — the port's settled answer for a broken invariant: never an
+invented id, never a decline. Until 2026-10-17 `ref_extra` was empty on every
+refund.
 
 **The adapter parses the wire shape, not the core.** The merchant sends
 `destination[<rail_code>][…]`; the core strips its own envelope — the outer
@@ -294,6 +315,22 @@ redacting `Debug` impls. So do both adapters' credential and wire types, and
 so does `vpay_api::v1::refunds`' `CreateParams` — which holds a payee's number
 in a raw `serde_json::Map` that has none of its own. Keep it that way.
 
+## `ProviderConfig` is per deployment today, whatever its doc says (2026-10-16)
+
+`ProviderConfig`'s doc comment calls it "Opaque per-merchant, per-rail
+configuration", and the port hands it to every method per call. **The core
+builds one per rail, not per merchant.** `vpay_api::v1::ResourceConfig::from_config`
+projects each `providers[]` entry into one `RailConfig`, `MerchantClient` names
+no provider account, and `charges` records `provider_code` and no account.
+Measured on vaam-apps/vpay `master` at `44c5bf5`.
+
+So on a deployment with two `merchant_id`s, both merchants are paid into the
+one account `providers[].credentials` belongs to on each rail. **Pass-through
+holds only on a deployment that serves one merchant.** Do not write an adapter
+that assumes it is handed a particular merchant's account, and do not describe
+a multi-merchant deployment as pass-through. Draft RFC-0009 proposes the fix;
+the port's trait would not change.
+
 ## Proposed port changes that do not exist (2026-09-23)
 
 Four Draft RFCs, merged by vaam-apps/vpay#244 as `7997536b`
@@ -312,6 +349,16 @@ not treat a Draft section as a decision:
 > adapter, and is not RFC-0007's `bank_transfer`, whose shape below is still
 > an open question.
 
+> **Qualified 2026-10-17.** RFC-0004 § 7 and RFC-0008 are **accepted**
+> through ADR-0029 (vaam-apps/vpay#275). That changes their standing, not
+> the tree: **none of the identifiers below exists**, `payment_method_types`
+> still holds rail codes, and an adapter written against them is written
+> against a design, as RFC-0010 and RFC-0011 are. ADR-0029 D2 says each
+> capability lands with its first consumer; do not add one to the port
+> ahead of the adapter that declares it. D12–D17 of that ADR (the method-type
+> spellings, `collapse`, `routing.requires`, fee schedules on the provider
+> account) are proposed and need the maintainer's confirmation.
+
 - **RFC-0004 § 7 — one adapter per provider.** Every card or bank PSP that
   meets four hard rules gets its own adapter. The rules: vpay never holds the
   money; no card number reaches `vpay-server`; a secret-authenticated status
@@ -319,6 +366,7 @@ not treat a Draft section as a decision:
   transfer become capabilities. It would add `supports_off_session`,
   `charge_stored`, `method_types`, `amount_limits` and
   `ProviderFlow::Instructions`. **None of those identifiers exists.**
+  _Accepted 2026-10-17 (ADR-0029); still none exists._
 - **RFC-0006 — card processing without a PSP.** A separately deployed card
   vault (`vpay-vault`), never linked into `vpay-server`, which appears to the
   core as one more rail (`vpay_vault`). It would also add
@@ -330,7 +378,51 @@ not treat a Draft section as a decision:
   (`flutterwave`), so that `payment_method_types` would accept method types.
   **Today `payment_method_types` holds rail codes**, and the checkout lists
   rails in the order the merchant gave (`build_rails` in
-  `backends/crates/vpay-api/src/browser/checkout_sessions.rs`).
+  `backends/crates/vpay-api/src/browser/checkout_sessions.rs`). _Accepted
+  2026-10-17 (ADR-0029, less its § 7 on health); the spellings `card`,
+  `mtn_wallet`, `orange_wallet`, `paypal` are the ADR's D12, proposed; no
+  router exists._
+- **RFC-0009 — provider accounts per merchant** (added 2026-10-16, not
+  part of vaam-apps/vpay#244). A `provider_accounts` list on each merchant
+  registration, merged per call with rail-level `providers[]` keys (a key at
+  both levels refuses to boot), an account id recorded on every charge, and a
+  rail offered only to a merchant with an account on it. **No trait method
+  changes**; what changes is which `ProviderConfig` the core hands the
+  adapter. Stripe Connect direct charges and PayPal's third-party model are
+  why it needs two levels. None of it exists: see the section above for what
+  the tree does today.
+- **RFC-0010 — a Stripe adapter** (added 2026-10-17). `vpay-adapter-stripe`,
+  rail code `stripe`, Stripe's hosted Checkout as one more `Redirect` rail:
+  `POST /v1/checkout/sessions` with the charge reference as the
+  `Idempotency-Key`, `GET /v1/checkout/sessions/{id}?expand[]=payment_intent`
+  as the authoritative read, `POST /v1/refunds` by `payment_intent`. It
+  would be the **first `RefundDestination::Origin` rail**. The two core
+  changes the RFC names **landed on 2026-10-17 as its delivery step 1**:
+  `refund_at_rail` puts the charge's `provider_txn_id` into the refund
+  `ChargeRef`'s `ref_extra` under `REFUND_PROVIDER_TXN_ID_KEY`, and the
+  conformance premise guard was relaxed with its three debts paid — the
+  refund-destination section above has both. Steps 2–7 are unbuilt. Its
+  callback URL is registered with Stripe, never sent per request,
+  so `the_submit_tells_the_rail_where_to_call_back` cannot hold on it as
+  written. **No crate, no mapping, no stub exists**, and nothing has called
+  Stripe from this repository.
+- **RFC-0011 — a PayPal adapter** (added 2026-10-17). `vpay-adapter-paypal`,
+  rail code `paypal`, Orders v2 as one more `Redirect` rail:
+  `POST /v2/checkout/orders` with `payment_source.paypal` and the charge
+  reference as `PayPal-Request-Id`, the `payer-action` link as the redirect,
+  `GET /v2/checkout/orders/{id}` as the read, refunds on the capture id. Its
+  one design decision: **PayPal's wallet is not captured on approval**
+  (`ORDER_COMPLETE_ON_PAYMENT_APPROVAL` is documented for alternative
+  payment methods only), so the RFC puts the
+  `POST /v2/checkout/orders/{id}/capture` call **inside `query_status`**
+  when the order is `APPROVED`, idempotent on a derived request id, rather
+  than adding a `complete` method to the port. It times out an unapproved
+  order locally (PayPal's status enum has no expired value) from PayPal's
+  documented three-hour validity. It proposes two small core changes of its
+  own — the hosted checkout's return page pulling the poll forward, and
+  `sandbox` as a livemode stub marker — and shares RFC-0010's two. **No
+  crate, no mapping, no stub exists**, and nothing has called PayPal from
+  this repository.
 
 A card PSP adapter is not blocked on engineering. The 2026-09-23 desk
 evaluation (`docs/plans/2026-09-23-card-provider-evaluation.md`,
