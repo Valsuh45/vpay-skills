@@ -27,11 +27,14 @@ says "259 lines as of 2026-09-11"; the git history says 275 that day.)
 > **vpay is a scaffold. It compiles, lints clean, its tests pass — and it
 > cannot take a payment. Do not deploy it.**
 
-As of 2026-09-15 exactly one real rail call has ever been made: a EUR
-`mtn_momo` PaymentIntent created, confirmed and settled against **MTN's
-sandbox**. No real payer, no production rail, no rail other than MTN's sandbox,
-no webhook to any merchant endpoint outside the repository, no pod has ever run
-vpay.
+~~As of 2026-09-15 exactly one real rail call has ever been made.~~ **Corrected
+2026-10-20 from the tester/maintainer's firsthand confirmation:** the testing
+recorded on 2026-09-15 included **over seven successful payments against MTN's
+real sandbox** — EUR `mtn_momo` PaymentIntents created, confirmed and settled.
+The original documented session had three attempts: two token-mint failures,
+then one settlement. That session was not the overall total. No real payer, no
+production rail, no rail other than MTN's sandbox, no webhook to any merchant
+endpoint outside the repository, no pod has ever run vpay.
 
 Everything else in this repository's history settled against a WireMock host
 that answered the way the documents say a rail answers.
