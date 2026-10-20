@@ -12,6 +12,25 @@ publishes no release tags and its workspace version has never moved off
 `v0.5.0` as of 2026-09-23 — and its workspace version is `0.5.0`. The naming
 rule stands, for the reasons VERSIONING.md now gives.)_
 
+## 2026-10-20 — MTN sandbox testing evidence correction
+
+~~Exactly one payment had settled against a real rail.~~ **Corrected
+2026-10-20 from the tester/maintainer's firsthand confirmation:** the testing
+recorded on 2026-09-15 included **over seven successful payments against MTN's
+real sandbox**. The three attempts in the original documented session were two
+token-mint failures followed by one successful settlement; that session was not
+the total of the testing.
+
+The orientation, payments, MTN, operations and troubleshooting briefings now
+distinguish the aggregate from that session. The Flutter and Tauri briefings
+still describe WireMock-only testing in their own lanes, without extending that
+claim to all vpay testing. No production rail or real payer is claimed, and the
+Orange, Disbursements/refund and account-holder lookup limitations are unchanged.
+
+This corrects the testing record, not the verified code baseline. Skill stamps
+and `coverage.json`'s baseline are unchanged; no full re-verification or release
+is claimed.
+
 ## v2026-10-09-69d822ab
 
 Verified against vpay `69d822ab` (2026-10-09), the squash of vaam-apps/vpay#273,
@@ -154,8 +173,10 @@ and `vpay-merchant-api`, `merchant_token_flow.rs` under `vpay-merchant-api`, and
 
 ### What did NOT change, and is the point
 
-- **The banner.** Exactly one real rail call has ever been made (MTN's sandbox,
-  2026-09-15), no rail has returned money, no cluster has run vpay. Nothing in the
+- **The banner.** ~~Exactly one real rail call has ever been made (MTN's sandbox,
+  2026-09-15).~~ **Count corrected 2026-10-20:** over seven payments succeeded
+  against MTN's real sandbox; see the firsthand correction above. No rail has
+  returned money, no cluster has run vpay. Nothing in the
   two pull requests moved it, and nothing here claims a cluster ran the wrapper
   chart: it proves the `file://` dependency only, and the published OCI chart has
   never been consumed as a dependency from a registry.
@@ -334,8 +355,10 @@ re-checked against `docs/status.md` and a grep for `NotImplemented`).
 
 ### What did NOT change, and is the point
 
-- **The banner.** Exactly one real rail call has ever been made (MTN's sandbox,
-  2026-09-15). Orange has never been called, no webhook has reached a merchant
+- **The banner.** ~~Exactly one real rail call has ever been made (MTN's sandbox,
+  2026-09-15).~~ **Count corrected 2026-10-20:** over seven payments succeeded
+  against MTN's real sandbox; see the firsthand correction above. Orange has
+  never been called, no webhook has reached a merchant
   outside the repository, no cluster has run vpay, and no rail has returned money.
   `orange_money::refund` is still the workspace's only declared `NotImplemented`
   token (re-grepped, not just re-read).
@@ -554,8 +577,11 @@ Nothing yet — this is the first release. Future entries go here, in the shape:
 Called out because they are the claims most likely to age, and an agent on a
 different tree needs to know which ones to re-check first:
 
-- **One real rail call has ever been made** — a EUR `mtn_momo` intent settled
-  against MTN's sandbox on 2026-09-15. Orange has never been called. Before
+- ~~**One real rail call has ever been made.**~~ **Corrected 2026-10-20:**
+  the tester/maintainer confirms firsthand **over seven successful payments
+  against MTN's real sandbox** in the testing recorded on 2026-09-15. The
+  original documented session had three attempts, two token-mint failures and
+  one settlement; it was not the overall total. Orange has never been called. Before
   `f063ee96`, no real rail call had been made at all, and
   `docs/runbooks/live-sandbox-test.md` and `config/application-live.yml` did not
   exist.
