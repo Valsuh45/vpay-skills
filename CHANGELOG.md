@@ -12,6 +12,36 @@ publishes no release tags and its workspace version has never moved off
 `v0.5.0` as of 2026-09-23 — and its workspace version is `0.5.0`. The naming
 rule stands, for the reasons VERSIONING.md now gives.)_
 
+## 2026-10-20 — the Notch Pay adapter, admitted under ADR-0031
+
+Read against vaam-apps/vpay#295 at `bf96e50`, merged to `master` as `357c825`
+the same day. `vpay-notchpay` is stamped `357c825`; every other skill's stamp
+stays where it was, because moving one means re-verifying the whole page
+(VERSIONING.md).
+
+- **New skill: `vpay-notchpay`.** The third rail. A push rail through an
+  aggregator, admitted under ADR-0031 because its status read takes a key
+  Notch Pay calls public. **It has never called Notch Pay.** It covers
+  `docs/flows/adapter-notchpay.md`, the threat model, the adapter crate and
+  its stub.
+- **Claims that stopped being true** on that branch: RFC-0012 is "gated, not
+  buildable" (`vpay-provider-adapters`, `vpay-conventions`); the port has
+  "nine methods" (ten: `accepted_exposure`); `verify-status` reports "exactly
+  one" token (two: `notchpay::refund`); "neither rail is `Origin`"
+  (`vpay-sdks`, `vpay-merchant-api`); `vpay-notchpay` is "linked by nothing";
+  `expected_suites` (52); the version-reference count (26);
+  `REQUIRED_RAIL_KEYS` checks presence only (it gained three columns:
+  `vpay-ops`, `vpay-troubleshooting`); `callback_url_pattern` returns a
+  `String` (an `Option` now: `references/conformance.md`).
+- **Livemode acknowledgement** (`bf96e50`, same day): the maintainer answered
+  the question the adapter PR asked, "Livemode acknowledgement: YES, require
+  it." `vpay-notchpay` said boot "does **not** refuse" and "do not build one
+  unasked"; in livemode boot now refuses `notchpay` without
+  `settings.accept_public_key_exposure: true`
+  (`PublicKeyExposureNotAcknowledged`), still warning when it is set.
+  `REQUIRED_RAIL_KEYS` gained a fourth column, not three (`vpay-ops`,
+  `vpay-troubleshooting`, `vpay-provider-adapters`' `adding-a-rail.md`).
+
 ## 2026-10-20 — MTN sandbox testing evidence correction
 
 ~~Exactly one payment had settled against a real rail.~~ **Corrected
