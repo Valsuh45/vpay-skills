@@ -39,6 +39,19 @@ total. See `docs/runbooks/live-sandbox-test.md` and
 `docs/status/verification/2026-09-15.md`. This is sandbox payment evidence,
 not evidence of production operation.
 
+**Added 2026-10-22: Notch Pay's real sandbox too, since 2026-10-21.** That
+day `docs/runbooks/notchpay-sandbox-test.md` ran, and vpay's own server,
+worker and Postgres took three test-mode payments through the `notchpay`
+adapter: one `succeeded`, one `failed`, and one whose short `amounts.total`
+the adapter refused as `Malformed` (`docs/status/verification/2026-10-21-notchpay-step5.md`;
+the `vpay-notchpay` skill). On 2026-10-22 the same runbook's B3b took three
+more through the same stack: Notch Pay's MTN timeout and canceled numbers,
+and an Orange payer (`docs/status/verification/2026-10-22-notchpay-b3b.md`,
+vaam-apps/vpay#338). Sandbox only, like MTN's. Until this note the list above
+named MTN alone. vpay's `docs/runbooks/README.md` likewise called
+`live-sandbox-test.md` "the one page whose commands have been run against a
+real rail" until vaam-apps/vpay#333 made it "the first", on 2026-10-22.
+
 Since 2026-09-20, `release.yml` itself has also run: it has pushed images to
 GHCR since 2026-09-03, and its `publish-chart` job pushed **and signed** a chart
 on `v0.3.0` (a `cosign verify` of it has still never been run). Describing
