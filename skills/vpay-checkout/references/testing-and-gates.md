@@ -69,10 +69,11 @@ A plain jsdom test, in the suite `just ci` does run, guarding a browser suite
 5. No story switches the addon off and nothing disables an axe rule. **This app
    pins the set at zero** — the expected arrays are empty, so the first
    suppression added fails `just ci` and has to be argued for in review.
-6. The **built** Storybook stylesheet actually defines `--color-base-100`,
-   and it resolves to a colour: every definition is a colour literal or a
-   `var()` of a property every definition of which is one (one level deep;
-   since 2026-10-23).
+6. The **built** Storybook stylesheet resolves `--color-base-100` to the colour
+   the package's own `theme.css` resolves it to, in `dark` and in `light`
+   (since vaam-apps/vpay#349; vaam-apps/vpay#355 had made it "every definition
+   ends in a colour, one `var()` deep" on 2026-10-23, and before that it was
+   "defines it as a hex").
 
 ### Case 2 is not cosmetic
 
@@ -151,6 +152,15 @@ failure, where the recipe's grep and the one-hop check passed it. In
 the JSON report and fails unless every case passed; #355's second run after
 the loop is gone. Do not re-add a hex or role-name literal to the assertion:
 compare against the package's theme, as it does now.
+
+**Why one `var()` was not enough (measured 2026-10-24).** #355's check read
+the stylesheet as text and followed one `var()`, so it could not tell the two
+themes apart: with only the light theme's `--md-sys-color-surface` deleted
+from a built checkout sheet, #355's case **passed** and #349's failed on
+`"light"`. `themeColours` applies cascade layers and theme pinning and follows
+`var()` to any depth; on `@vaam-apps/ui` 0.5.0 the package resolves
+`--color-base-100` to `#0f0c1b` (dark) and `#fdf7ff` (light). #355's one-hop
+helpers are gone; its `VPAY_STORYBOOK_BUILT` guard stays.
 
 ## `src/styling-gate.test.ts` — what `just ci` cannot build
 

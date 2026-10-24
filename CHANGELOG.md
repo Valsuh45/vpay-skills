@@ -12,6 +12,47 @@ publishes no release tags and its workspace version has never moved off
 `v0.5.0` as of 2026-09-23 — and its workspace version is `0.5.0`. The naming
 rule stands, for the reasons VERSIONING.md now gives.)_
 
+## 2026-10-24 — the rest of vaam-apps/vpay#349: the recipe, CI and troubleshooting pages
+
+Read against vaam-apps/vpay's `master` at `bcbbf6fe`. #81 (below) brought
+`vpay-checkout`'s case 6 up to vaam-apps/vpay#349, merged as `3bdbbeac`, and
+touched no other skill. This entry, from #73, brings the other four pages up to
+the same change and adds the measurement behind it to `vpay-checkout`. The
+`build-storybook` recipe, both apps' `a11y-gate.test.ts` and `contrast.ts`, and
+`ci.yml` are unchanged between `3bdbbeac` and `bcbbf6fe`.
+
+- `vpay-checkout` (`references/testing-and-gates.md`): why one `var()` was not
+  enough. With only the light theme's role deleted from a built checkout
+  sheet, #355's case passed and #349's failed on `"light"` (measured
+  2026-10-24). Also the grounds the package resolves to on `@vaam-apps/ui`
+  0.5.0, and case 6's line in the list of six cases, which #81 left at #355's
+  wording.
+- `vpay-tooling` (`references/recipes.md`, `references/ci.md`) and
+  `vpay-frontend` (`references/workspace.md`): `just build-storybook` runs the
+  file once per app, inside its loop, with `VPAY_STORYBOOK_BUILT=1` (#355) and
+  a read of Vitest's JSON report that fails on any skip (#349). Also why the
+  recipe's grep alone cannot see a `var()`.
+- `vpay-troubleshooting` (`references/node-web.md`): the case's failure
+  messages, `VPAY_STORYBOOK_BUILT`'s included, its expected skip in
+  `pnpm -r test`, and what each vpay version in this sequence fails on.
+
+### Stopped being true
+
+- "every definition is a colour literal or a `var()` of a property every
+  definition of which is one (one level deep; since 2026-10-23)" as case 6's
+  summary (`vpay-checkout/references/testing-and-gates.md`, the list of six
+  cases). It resolves per theme, to any depth, against the package.
+- "greps the built stylesheet asserting `--color-base-100` is **defined**" as
+  the whole of `just build-storybook`'s check (`vpay-tooling/references/recipes.md`),
+  and "Storybook build **and** the theme-defined assertion" as its whole row
+  (`vpay-frontend/references/workspace.md`). Both were true before #355; the
+  recipe now also runs both apps' `a11y-gate.test.ts` against its artefact.
+- The `web` job's `just build-storybook` listed with nothing said of that test
+  (`vpay-tooling/references/ci.md`).
+
+Still true: `pnpm -r test` and `just ci` build no Storybook, so the case
+reports one skip per app there, by design.
+
 ## 2026-10-24 — an intent names the rail its charge was made on: `payment_method_details` (vaam-apps/vpay#365)
 
 Read against vpay `08fb2566`, vaam-apps/vpay#365's squash-merge commit, after a
