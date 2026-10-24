@@ -12,6 +12,30 @@ publishes no release tags and its workspace version has never moved off
 `v0.5.0` as of 2026-09-23 — and its workspace version is `0.5.0`. The naming
 rule stands, for the reasons VERSIONING.md now gives.)_
 
+## 2026-10-24 — a refund's destination may name the charge's payment-method type (vaam-apps/vpay#363)
+
+Read against `98f4d32b`, vaam-apps/vpay#363's squash-merge commit on `master`,
+after a first read at its head `874c255b`; nothing this entry cites changed
+between the two. The maintainer answered "Both" to the routed-refund gap: this
+is the half that is built. `POST /v1/refunds` accepts `destination[<the
+charge's recorded method type>][…]` beside `destination[<rail code>][…]`;
+naming both, another type, or a type on a charge that records none is a `400`.
+`/v1` naming the rail is not built.
+
+- `vpay-merchant-api` (`references/objects.md`): the routed-refund paragraph.
+- `vpay-sdks` (`SKILL.md`, `references/stripe-compat.md`): a type in
+  `RefundDestination` is accepted when it is the charge's own.
+
+### Stopped being true
+
+- "`destination[mtn_wallet][msisdn]` is a `400` naming `destination`" and "a
+  merchant … has to know the rail another way" (`vpay-merchant-api`), "A type
+  in a refund's `destination` … is refused by the server"
+  (`vpay-sdks/SKILL.md`), and "The key is never a payment-method type"
+  (`vpay-sdks/references/stripe-compat.md`), all written earlier on
+  2026-10-24 for vaam-apps/vpay#359. A type is accepted when the charge records
+  it.
+
 ## 2026-10-24 — Notch Pay's first delivered webhooks: the signature is over the raw body, and the adapter reads `event` (vaam-apps/vpay#364)
 
 Read against `4df5e0d2`, vaam-apps/vpay#364's squash-merge commit on `master`,
