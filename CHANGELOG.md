@@ -12,6 +12,87 @@ publishes no release tags and its workspace version has never moved off
 `v0.5.0` as of 2026-09-23 — and its workspace version is `0.5.0`. The naming
 rule stands, for the reasons VERSIONING.md now gives.)_
 
+## 2026-10-23 — rail callbacks are checked where the rail signs (RFC-0014)
+
+Read against vaam-apps/vpay's `master` at `820c52b3`, the merge of
+vaam-apps/vpay#357, which builds RFC-0014's port and Notch Pay's signature
+check.
+Since #353 an unset `register` is `off` on Notch Pay, so the endpoint whose
+Hash Key this checks is registered by hand in Notch Pay's dashboard. The maintainer was asked "Webhook signature
+verification (RFC-0014) needs Notch Pay's hash key held by vpay as a secret.
+Lift the earlier 'hash key is evidence only, never vpay configuration' rule
+for this?" and answered "Yes, build RFC-0014". vpay's evidence page is
+`docs/status/verification/2026-10-23-webhook-signatures.md`. **Stub-proven;
+never verified against a real Notch Pay delivery.** No webhook has ever been
+delivered: the 2026-10-23 sandbox run found an API-created endpoint stored
+with `"url": null`, so a real check needs the Hash Key and a
+dashboard-registered endpoint.
+
+An independent security review of the branch the same day found no security
+defect, and its should-fix findings are built and read here too: a declared
+check that is not performed fails closed at the route; a match under the
+previous secret is `CallbackVerdict::VerifiedPrevious`
+(`verdict="verified_previous"`), with a `WARN` at every `serve` boot while
+it is set; two more refusals, `CallbackSigningPreviousWithoutCurrent` and
+`CallbackSigningSecretWhitespace`; and the route borrows the rail's
+configuration instead of cloning its credentials. vpay's record is the
+verification page's "Security review" section.
+
+- `vpay-provider-adapters` (`SKILL.md`, `references/adding-a-rail.md`):
+  RFC-0014 rewritten from "nothing in it is built" to what is: `vpay_provider::callback`
+  (`CallbackRequest`, `CallbackVerdict`, the port-named signing-secret
+  credentials, the one constant-time HMAC comparison),
+  `ProviderAdapter::verify_callback`, `Capabilities::callback_check`, the
+  conformance census and its per-rail signing row, and the six boot
+  refusals; what a new signing rail must do (answer `key.verified()`; a
+  declared check left on the default fails closed). The `CallbackVerdict`
+  bullet's "only the first three admit the pull-forward" was wrong as
+  written (it named `Invalid` and missed `NoSecret`) and is corrected.
+- `vpay-notchpay` (`SKILL.md`): the signature is checked; the Hash Key is a
+  credential (`callback_signing_secret`, `${NOTCHPAY_HASH_KEY}`); the livemode
+  refusal and `callbacks.verify: off`; raw body versus re-serialisation is
+  RFC-0012 § 10 item 7, still open; replay accepted.
+- `vpay-ops` (`references/configuration.md`, `references/observability.md`):
+  the signing secrets, `callbacks.verify`, the six refusals, rotation and its
+  end signal (`verified_previous`, the boot `WARN`), and the fifteenth metric,
+  `vpay_provider_callbacks_total{provider,verdict}`.
+- `vpay-conventions` (`references/adr-index.md`): RFC-0014 partly built, and
+  RFC-0012 § 2's refusal lifted for this purpose.
+- `vpay-troubleshooting` (`references/config-boot.md`): the six
+  `78`s and which one a real deployment meets.
+- `vpay-merchant-api` (`references/routes.md`) and `vpay-reconciler`
+  (`SKILL.md`): the callback route's new step, and that a refused callback is
+  the same `202`.
+- `vpay` and `vpay-conventions` (`SKILL.md`): "Callbacks are hints" gains
+  AGENTS.md's new sentence, that a verified signature decides only the
+  pull-forward.
+
+### Stopped being true
+
+- "RFC-0014 … Draft, **nothing in it is built**" and "**None of those names
+  exists** under `backends/`" (`vpay-provider-adapters`,
+  `vpay-conventions`). `verify_callback`, `CallbackRequest`,
+  `CallbackVerdict` and `callback_check` exist.
+- "The signature (`x-notch-signature`) is **not** checked, because the port
+  passes no headers" (`vpay-notchpay`). It is, where the Hash Key is
+  configured.
+- "RFC-0012's Hash Key stays out of configuration" and "**Do not add a
+  verifier inside an adapter ahead of the port change**"
+  (`vpay-provider-adapters`). The port change landed, and the Hash Key is
+  `credentials.callback_signing_secret`.
+- "Webhook signature verification (needs a port change; RFC-0014 … a
+  draft)" in `vpay-notchpay`'s "Not built". What is not done is checking a
+  webhook Notch Pay really sent.
+- "webhook signature verification (the port's `parse_callback` receives no
+  headers, so a verifier would be code nothing can call)" (the Notch Pay
+  client's omissions, `vpay-provider-adapters`). The check is the adapter's.
+- "**There is no signature verification to find**" on `/provider/{code}/callback`
+  (`vpay-merchant-api`). True of MTN and Orange only.
+- "Fourteen" metrics (`vpay-ops`): fifteen.
+- An uncommented `notchpay` block needs two secrets (`vpay-ops`): three,
+  with `NOTCHPAY_HASH_KEY`, and livemode refuses to boot without it unless
+  `callbacks: { verify: off }`.
+
 ## 2026-10-23 — the a11y gate's built-theme case resolves `var()`, and `just build-storybook` runs it
 
 Read against vaam-apps/vpay's `master` at `37fd72df`, the merge of
