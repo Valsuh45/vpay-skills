@@ -11,7 +11,7 @@ twelve until 2026-09-17, when [#201](https://github.com/vaam-apps/vpay/pull/201)
 appended `verify-versions`; [#187](https://github.com/vaam-apps/vpay/pull/187)
 appended `verify-privacy-inventory` and made it fourteen on 2026-09-18;
 [#233](https://github.com/vaam-apps/vpay/pull/233) appends `verify-doc-counts`
-and makes it fifteen on 2026-09-20; issue #150 / ADR-0033 appends
+and makes it fifteen on 2026-09-20; issue #150 / ADR-0034 appends
 `verify-security-inventory` and makes it sixteen on 2026-10-26.
 
 > **Read the recipe, not the prose — and here is the authority rule caught in
@@ -764,7 +764,7 @@ and says nothing about the numbers `verify-docs` printed.
 
 ## 16. `verify-security-inventory`
 
-_The sixteenth gate, 2026-10-26 (issue #150, ADR-0033). The security
+_The sixteenth gate, 2026-10-26 (issue #150, ADR-0034). The security
 counterpart of `verify-privacy-inventory`: it keeps
 `schemas/security-inventory.yaml` honest against the tree._
 

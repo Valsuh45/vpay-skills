@@ -109,7 +109,7 @@ here or in vpay. It was twelve until 2026-09-17, thirteen on 2026-09-17
 (`verify-versions`, #201), fourteen from 2026-09-18 (`verify-privacy-inventory`,
 #187), **fifteen since 2026-09-20** (`verify-doc-counts`, #233) and
 **sixteen since 2026-10-26** (`verify-security-inventory`, issue #150,
-ADR-0033).
+ADR-0034).
 ~~It was fourteen until 2026-09-18~~ — this page said that, which has the dates
 backwards. `verify-doc-counts` now fails a vpay document whose marked count
 disagrees with the recipe. The recipe at `a33aac61` lists sixteen targets:

@@ -82,7 +82,7 @@ tree where `pnpm install` has not been run.
 ## `just verify` — the sixteen gates
 
 **Sixteen since 2026-10-26** (`verify-security-inventory`, issue #150,
-ADR-0033) — fifteen from 2026-09-20 (`verify-doc-counts`, PR #233), fourteen
+ADR-0034) — fifteen from 2026-09-20 (`verify-doc-counts`, PR #233), fourteen
 from 2026-09-18 (`verify-privacy-inventory`, PR #187), thirteen from 2026-09-17
 (`verify-versions`, PR #201), twelve before that. Fourteen are `cargo xtask`
 subcommands; `check-schema` and `verify-ui` are shell in the justfile. The
@@ -107,7 +107,7 @@ added.
 | `verify-versions`           | **13th, 2026-09-17 (#201)** — release-please-owned versions that disagree; an `extra-files` entry with no `x-release-please-version` line; an internal Cargo `version = "…"` pin without one                                                                                                                                                                                                                                                                                                                               |
 | `verify-privacy-inventory`  | **14th, 2026-09-18 (#187, issue #144)** — a migrated column with no element in `schemas/privacy-inventory.yaml`, or an inventory copy naming no live column. Both directions. **Since 2026-10-09 (#273, which carried #268; RFC-0002 PR 3) also:** a `debug_protections`-registered type that derives `Debug`, or one no longer declared in its file, or an entry naming an element not in the inventory — the same both-directions rule for the hand-written redacting `Debug` boundary                                   |
 | `verify-doc-counts`         | **15th, 2026-09-20 (#233)** — a `<!-- count:KIND ARG… -->`-marked number in a tracked `*.md` that no longer equals what the tree measures, an unknown `KIND`, or no marker found at all                                                                                                                                                                                                                                                                                                                                    |
-| `verify-security-inventory` | **16th, 2026-10-26 (issue #150, ADR-0033)** — an unknown key in `schemas/security-inventory.yaml` (every struct has `deny_unknown_fields`); a service, crate, path or cited test that does not exist; a table that a migration does not create **or** a live table in no store; an invented secret `config_keys` path; a published manifest that is private or misnamed; a control with an unknown status; a `gap` control with no `related_gap`; a gap with no tracker or an issue number no document under `docs/` cites |
+| `verify-security-inventory` | **16th, 2026-10-26 (issue #150, ADR-0034)** — an unknown key in `schemas/security-inventory.yaml` (every struct has `deny_unknown_fields`); a service, crate, path or cited test that does not exist; a table that a migration does not create **or** a live table in no store; an invented secret `config_keys` path; a published manifest that is private or misnamed; a control with an unknown status; a `gap` control with no `related_gap`; a gap with no tracker or an issue number no document under `docs/` cites |
 
 `verify-docs` runs last and is **not** a gate — it exits 0 whatever it finds.
 That is deliberate: the cheapest way to pass a doc-ratio gate is to delete the
