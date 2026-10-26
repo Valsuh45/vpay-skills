@@ -112,8 +112,8 @@ here or in vpay. It was twelve until 2026-09-17, thirteen on 2026-09-17
 ADR-0034).
 ~~It was fourteen until 2026-09-18~~ — this page said that, which has the dates
 backwards. `verify-doc-counts` now fails a vpay document whose marked count
-disagrees with the recipe. The recipe at `a33aac61` lists sixteen targets:
-sixteen gates plus `verify-docs`, the report that never fails.
+disagrees with the recipe. The recipe now lists seventeen targets: sixteen gates plus
+`verify-docs`, the report that never fails.
 
 When you finish: `just ci`, then update the status page your change belongs to
 **in the same commit**, then the relevant `docs/flows/*.md` **Status** section.
