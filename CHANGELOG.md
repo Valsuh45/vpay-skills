@@ -1,5 +1,135 @@
 # Changelog
 
+## 2026-11-17 (review fixes) — vpay#405 merged, `batch4` is vpay#406
+
+- **`vpay-tooling`:** vpay#405 merged as `9580c2d8`. `SKILL.md` and
+  `references/sdlc.md` are stamped to it and lose their "unmerged" wording;
+  the page's "accepts"/"are accepted" wording for three pending entries is
+  recorded, and its one-word fix is pending in vpay#406.
+- **`batch4` is vpay#406** (`ea604522` #147, `d080da35` #79, `3c00027d` the
+  `sdlc.md` wording), rebased on `9580c2d8`; every reference is renamed.
+- **`vpay-sdks` `references/stripe-compat.md`:** a `payments:write`-only
+  refund with a `destination` is refused `403` once the request is otherwise
+  valid, before the account-holder lookup — not "before anything else is
+  checked", which it said in the first commit of this batch:
+  `resolve_target`'s intent `404`, no-charge `409`, `supports_refunds` `400` and
+  amount/`destination` `400`s come first.
+- **`vpay-customers`, `vpay-ops`:** the limiter values and the scope are in
+  `config/application.yml`, `application-live.yml` and
+  `application-notchpay-sandbox.yml`, not "every shipped overlay";
+  `application-sandbox.yml` inherits them from the base.
+- **`vpay-data-layer`:** a duplicated "vpay#404, vpay#404" removed.
+
+## 2026-11-17 (later) — vpay#402–#404 merged, the eighteenth gate, and `batch4`'s telemetry sweep and payer mask
+
+Re-read against vpay `c3358352` (`master` after vpay#402, #397, #403 and
+#404), the head of vpay#405 (`5c39baf9`, the #387 carry, docs only, unmerged)
+and vpay's unmerged `batch4` (`6e55317c`, `f4a70876`). The entry below this one
+was written before those merged; what it said about branches is corrected
+here rather than rewritten there.
+
+- **Branch notes become merge notes.** Every "read on its branch before
+  merge" note for vpay#402, #403 and #404 now names `c3358352`. The branch
+  versions differed from `master` only in vpay#404's doc corrections, which are
+  folded in: every `mtn_momo`/`orange_money` refund needs
+  `account_holders:read`; the limiter keys are `attempts` and
+  `window_seconds`; `/v1`'s 403 is `forbidden`, and `insufficient_scope`
+  exists only on `/mcp/v1`.
+- **`vpay-data-layer`, `vpay-payments`, `vpay-customers`:** vpay#404
+  renumbered its migrations to `0060_audit-events-and-lookup-rate-limits.sql`
+  and `0061_rate-limit-window-expiry.sql`; #96 kept `0059`. 61 on `master`,
+  drift 232/31/20, 24 `MODEL_TABLES`. The "two `0059`s" note is replaced.
+- **`vpay-tooling`, `vpay`, `vpay-docs-status`, README:** `verify-adr-numbers`
+  (vpay#397, issue #170) is the eighteenth gate — a new row, a new § 18 in
+  `gates.md`, and every "seventeen" moved with its history. This skills
+  repository's previous entry said the gate count was unchanged; it was
+  measured on branches that predated #397.
+- **`vpay-tooling` `references/sdlc.md`:** at vpay#405's head the page's
+  advisory lists match the files (braces and picomatch; five Rust entries),
+  but it calls three **pending** entries "accepted". The "they disagree"
+  section is replaced.
+- **`batch4` (pending), issue #147:** `ProviderError::Rejected` gains
+  `context` and its `Display` drops the rail's words;
+  `credentials_refused`, `malformed_json`, `http::redact_url`, Orange's
+  `wire::ErrorEnvelope`; webhook excerpts and the exhausted alert print an
+  origin; `docs/runbooks/privacy-telemetry.md` with every retention and owner
+  undecided — in `vpay-provider-adapters`, `vpay-conventions`, `vpay-mtn-momo`,
+  `vpay-orange-money`, `vpay-webhooks` and `vpay-ops`.
+- **`batch4` (pending), issue #79 item 4:** `charges.payer_ref_masked` is
+  written (`+237••••67`, push rails only), backfilled and constrained by
+  migration `0062`; the log mask `+2376••••NNN` stays separate until RFC-0002
+  D3; the dashboard still renders nothing from `/dash/v1` — in
+  `vpay-customers`, `vpay-dashboard`, `vpay-data-layer` and
+  `vpay-troubleshooting`.
+- **`coverage.json`:** claims migrations `0059`–`0062` and
+  `docs/runbooks/privacy-telemetry.md`. Against `master` alone the gate fails
+  on `0062`, the runbook and the two #387 pages until `batch4` and vpay#405
+  merge.
+
+Not done: no vpay test or gate was run; names were checked to exist on the ref
+cited. Stamps are unchanged; each re-read passage names its ref.
+
+## 2026-11-17 — the popup's two channels, `requires_review`, the invoice number, `account_holders:read`, and the SDLC pages
+
+Read against vpay `44b19d69` (`master`, 2026-11-17: vaam-apps/vpay#399 and
+#400) and, **before they merged**, on the branches for vaam-apps/vpay#402
+(`batch1`) and the follow-up pull requests for issues #91, #96, #387 and PR
+#396's carry. No stamp moved to a branch commit (VERSIONING.md rule 1); each
+passage read on a branch says so where it stands. `verify-coverage` would fail
+against `master` alone on the five paths below that only those branches add —
+the skills are newer than that tree until they merge.
+
+- **`vpay-checkout`:** § "Who listens on the opener's side" — vpay's own
+  `vpay:complete` is the popup's primary channel, `success_url` the fallback,
+  once per session id, with a session reported `open` releasable on reopen;
+  the merchant's `Referrer-Policy` must keep its origin. § "The invoice line"
+  (issue #91 D6). The not-proven list gains both.
+- **`vpay-sdks`:** the stripe-js row; `references/parity.md` (the popup rows,
+  and the new `⛔`/`⛔` `429`/`Retry-After` row); `references/stripe-compat.md`
+  (six invoice cases; `stripe.invoiceItems` cannot reach `/v1/invoice_items`;
+  a refund with a `destination` needs `account_holders:read`);
+  `references/tauri-plugin.md` (its web host was not changed).
+- **`vpay-invoices`:** the payer sees the number; the Stripe-compat gap is
+  struck; the Cypress case is still unwritten though its blocker is gone.
+- **`vpay-payments`, `vpay-reconciler`, `vpay-webhooks`, `vpay-ops`,
+  `vpay-dashboard`:** `requires_review` (issue #96) — terminal, not live, no
+  event, posting or refund; `VpayChargeRequiresReview` and its two-halved
+  expression; **no operator action, no dashboard listing, no merchant event**,
+  and the decline-on-a-canceled-intent case still rolls back (an open hole).
+- **`vpay-customers`, `vpay-merchant-api`, `vpay-ops`, `vpay-mtn-momo`,
+  `vpay-troubleshooting`, `vpay`:** `account_holders:read` (**breaking**, no
+  migration window), the per-credential lookup budget, the append-only
+  `audit_events` journal, the MCP principal carrying the token's own scopes,
+  the `privacy:` block and its boot refusals — every value marked
+  **PROVISIONAL pending RFC-0002 D3/D5/D6/D7/D9**; D8's operator surface, D9's
+  retention handler and break-glass access are recorded as not built. "The
+  three controls — RESERVED, NOT BUILT" is struck with its date.
+- **`vpay-data-layer`:** two branches both number their migration `0059`
+  (issue #96; PR #396, which also adds `0060`); the drift constants and
+  `MODEL_TABLES` on each.
+- **`vpay-orange-money`, `vpay-provider-adapters`:** the stub's hidden inputs
+  are percent-encoded and every payer action sits at priority 5 (issue #106).
+- **`vpay-mtn-momo`:** `mtn-sandbox-test/test.sh`, a by-hand helper for issue
+  #330 that has never completed a payment.
+- **`vpay-troubleshooting`, `vpay-tooling`:** merchant-demo's MTN numbers are
+  `237670000900`/`101`/`102` since #399; the 2026-11-17 advisory entries
+  (`rmcp` fixed; `chrono`, `astral-tokio-tar` and `picomatch` ignored **pending
+  acceptance**); `ci.md`'s "nothing is suppressed" (stale since 2026-10-09) is
+  struck; a new `403` symptom row.
+- **`vpay-tooling`:** a new `references/sdlc.md` for `docs/flows/sdlc.md` and
+  `docs/flows/emergency-changes.md` — policy, mostly practice, with a proposed
+  SLA, and advisory lists that already disagree with the files.
+- **`vpay-conventions`:** the two pending `deny.toml` entries.
+- **`coverage.json`:** claims `docs/flows/sdlc.md`,
+  `docs/flows/emergency-changes.md`, `docs/runbooks/charges-requires-review.md`,
+  `mtn-sandbox-test/test.sh` and `backends/crates/vpay-db/src/audit_events.rs`.
+  No migration is claimed by number while two branches share `0059`.
+
+Not done: no vpay test, build or gate was run for this; test and symbol names
+were checked to exist on their branches. vpay disagrees with itself in places
+recorded inline (the popup case count, `configuration.md`'s `max_attempts`,
+`sdlc.md`'s advisory lists) and not fixed here.
+
 ## 2026-10-30 — `human_login`: staff sign-in, SSO and the dashboard's sign-in pages are back
 
 Read against vpay `10f42747` (2026-10-30). vaam-apps/vpay#388 (VPA-2), #390

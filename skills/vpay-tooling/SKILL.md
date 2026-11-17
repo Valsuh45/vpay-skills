@@ -1,11 +1,15 @@
 ---
 name: vpay-tooling
-description: How to build, test, lint and gate vpay — the just recipes that matter, the seventeen verify gates and how contributors trip each one, what just ci actually runs, the toolchain pins that must move in lockstep, the compose stacks and ports, and the CI workflows. Load this before running any command in vpay, before adding a test binary or a migration, before bumping a toolchain pin, and whenever a gate fails and the message is not self-explanatory.
+description: How to build, test, lint and gate vpay — the just recipes that matter, the eighteen verify gates (seventeen until vpay#397, 2026-11-17) and how contributors trip each one, what just ci actually runs, the toolchain pins that must move in lockstep, the compose stacks and ports, and the CI workflows. Load this before running any command in vpay, before adding a test binary or a migration, before bumping a toolchain pin, and whenever a gate fails and the message is not self-explanatory.
 ---
 
 # vpay tooling and gates
 
-> **Verified against vpay `f885170c` (2026-10-27).** Version-sensitive claims below
+> **Verified against vpay `9580c2d8` (2026-11-17)** for the SDLC section (after
+> vpay#405 merged), and at `c3358352` (2026-11-17, after vpay#397) for the gate
+> count and the `verify-adr-numbers` row; the merchant-demo MSISDN sentence was
+> re-read at `44b19d69` (2026-11-17), and the rest of this page was last verified
+> against `f885170c` (2026-10-27). Version-sensitive claims below
 > carry the date they became true — a feature in vpay's `master` may be absent
 > from the tree you are editing. On an older or newer vpay, trust the
 > repository over this page. See [VERSIONING.md](https://github.com/vaam-apps/vpay-skills/blob/main/VERSIONING.md).
@@ -64,7 +68,7 @@ In execution order:
 1. `cargo fmt --all -- --check`
 2. `pnpm exec prettier --check .`
 3. `cargo clippy --workspace --all-targets -- -D warnings`
-4. `just verify` — the seventeen gates plus the `verify-docs` report
+4. `just verify` — the eighteen gates plus the `verify-docs` report
 5. `cargo nextest run --workspace`
 6. `cargo test --doc --workspace` — a **second runner**; nextest runs no doctests
 7. `just verify-ignored` — the suite census
@@ -79,13 +83,15 @@ tree where `pnpm install` has not been run.
 
 `AGENTS.md` requires `just ci` to pass locally before review.
 
-## `just verify` — the seventeen gates
+## `just verify` — the eighteen gates
 
-**Seventeen since 2026-10-27** (`verify-mcp-parity`, vaam-apps/vpay#377,
-ADR-0033 D8) — sixteen from 2026-10-26 (`verify-security-inventory`, issue
+**Eighteen since 2026-11-17** (`verify-adr-numbers`, vaam-apps/vpay#397, issue
+#170; the gate's own docs date it 2026-11-16, the day it was written) —
+seventeen from 2026-10-27 (`verify-mcp-parity`, vaam-apps/vpay#377,
+ADR-0033 D8), sixteen from 2026-10-26 (`verify-security-inventory`, issue
 #150, ADR-0034), fifteen from 2026-09-20 (`verify-doc-counts`, PR #233), fourteen
 from 2026-09-18 (`verify-privacy-inventory`, PR #187), thirteen from 2026-09-17
-(`verify-versions`, PR #201), twelve before that. Fifteen are `cargo xtask`
+(`verify-versions`, PR #201), twelve before that. Sixteen are `cargo xtask`
 subcommands; `check-schema` and `verify-ui` are shell in the justfile. The
 order is chronological by landing date on purpose, so that "check-schema is
 the seventh gate" — which four other files say — stays true when a gate is
@@ -110,6 +116,7 @@ added.
 | `verify-doc-counts`         | **15th, 2026-09-20 (#233)** — a `<!-- count:KIND ARG… -->`-marked number in a tracked `*.md` that no longer equals what the tree measures, an unknown `KIND`, or no marker found at all                                                                                                                                                                                                                                                                                                                                    |
 | `verify-security-inventory` | **16th, 2026-10-26 (issue #150, ADR-0034)** — an unknown key in `schemas/security-inventory.yaml` (every struct has `deny_unknown_fields`); a service, crate, path or cited test that does not exist; a table that a migration does not create **or** a live table in no store; an invented secret `config_keys` path; a published manifest that is private or misnamed; a control with an unknown status; a `gap` control with no `related_gap`; a gap with no tracker or an issue number no document under `docs/` cites |
 | `verify-mcp-parity`         | **17th, 2026-10-27 (vaam-apps/vpay#377, ADR-0033 D8)** — a mounted `/v1` route (`V1_ROUTES`) with no row in `docs/api/mcp-parity.md`, two rows for one route, a row naming an unmounted route or a tool `schemas/vpay.cstack` does not declare, a gap with no `YYYY-MM-DD` date or no reason, or a declared `@mcp(tool: …)` no row names. Both directions. It checks the map, **not** that a tool behaves like its route: `mcp_merchant.rs` does that                                                                      |
+| `verify-adr-numbers`        | **18th, 2026-11-17 (vaam-apps/vpay#397, issue #170)** — a file in `docs/adr/` not named `NNNN-slug.md` (four digits, a hyphen, a lowercase alphanumeric-and-hyphen slug), two files sharing a leading number (it names every colliding file), or an empty `docs/adr/`. Gaps in the numbering are allowed. Also a step of its own in CI's `self-checks`                                                                                                                                                                     |
 
 `verify-docs` runs last and is **not** a gate — it exits 0 whatever it finds.
 That is deliberate: the cheapest way to pass a doc-ratio gate is to delete the
@@ -215,7 +222,8 @@ Four facts with no home above, kept short here on purpose — depth is in
   cannot see it at all. **None of the three Rust ones is in `just ci` or
   `just verify`** (T7: the CI image has no `libwebkit2gtk-4.1-dev`, no Android
   SDK/NDK and no Xcode), and the justfile's gate tally is unchanged by them
-  (seventeen as of 2026-10-27). The package's **TypeScript** half is gated regardless:
+  (seventeen as of 2026-10-27; eighteen since vpay#397 added a gate that has
+  nothing to do with them). The package's **TypeScript** half is gated regardless:
   `pnpm-workspace.yaml` names `sdks/tauri/*`, so `lint-web`, `test-web` and
   `fmt-check-web` reach it with no recipe change. `vpay-sdks` owns what the
   plugin does; `check-tauri-mobile` needs
@@ -231,11 +239,31 @@ Four facts with no home above, kept short here on purpose — depth is in
   server-side phone validation (#186) rejects it before the mock rail is
   ever asked. `worker_e2e`/`worker_kill9` and `examples/shop`'s demo table
   now use real, `phonenumber`-valid Cameroon numbers matching
-  `2376[579]\d{7}`.
+  `2376[579]\d{7}`. `examples/merchant-demo` followed on 2026-11-17
+  (vaam-apps/vpay#399, verified at `44b19d69`): its three MTN outcomes are
+  `237670000900`/`101`/`102`.
+
+## The SDLC policy pages — what is enforced and what is practice (issue #387, 2026-11-17)
+
+_vpay#405 (the carry of #387), merged as `9580c2d8`._ Two flow pages,
+`docs/flows/sdlc.md` (the ISO/IEC 27001 A.8.25 secure-SDLC control) and
+`docs/flows/emergency-changes.md`, write the change-to-production path down as
+policy. **They describe gates this page already covers, and they say plainly
+which of their own controls nothing enforces**: no `CODEOWNERS`, no evidenced
+branch protection, no review or retrospective record, a remediation SLA that is
+**proposed and pending maintainer approval**, and an allowlist entry that turns
+`audit-web` or `deny` green with no time limit. **Do not cite either page as
+evidence that a control is enforced**, and do not describe the SLA as approved.
+Their advisory lists match `master`'s files, but at `9580c2d8` the page says
+`deny.toml` "accepts" five advisories when two of them (`chrono`,
+`astral-tokio-tar`), and picomatch on the web side, are only **pending**
+acceptance; a one-word fix ("ignores", saying which are accepted and which
+pending) is pending in vpay#406. Trust `pnpm-workspace.yaml` and `deny.toml`. Details:
+[references/sdlc.md](references/sdlc.md).
 
 ## Further reading
 
-- [references/gates.md](references/gates.md) — the seventeen gates in depth,
+- [references/gates.md](references/gates.md) — the eighteen gates in depth,
   including every `verify-ui` check (its numbering is non-contiguous, so count
   the recipe's greps rather than trusting its header), the both-directions
   gates, and the `<!-- count:KIND ARG… -->` marker convention
@@ -245,3 +273,6 @@ Four facts with no home above, kept short here on purpose — depth is in
 - [references/ci.md](references/ci.md) — the three workflows, `changes` path
   gating, the readiness-poll lore, the `audit-web` retry loop, and the
   testcontainers serialisation in `.config/nextest.toml`.
+- [references/sdlc.md](references/sdlc.md) — `docs/flows/sdlc.md` and
+  `docs/flows/emergency-changes.md`: the policy, the advisory exception path,
+  and which sentences are practice rather than a gate.

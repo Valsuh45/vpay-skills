@@ -79,7 +79,7 @@ comment; first-party `actions/*` use tags.
 | Job                              | Gated by                 | Runs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | -------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `changes`                        | —                        | `dorny/paths-filter` with `fetch-depth: 0`. Outputs `rust`, `deny`, `web`, `e2e`, `deploy`                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `verify` — _self-checks_         | **nothing. Always runs** | the seventeen gates (2026-10-27) in `just verify`'s exact order, then `cargo xtask verify-docs`                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `verify` — _self-checks_         | **nothing. Always runs** | the eighteen gates (2026-11-17; seventeen from 2026-10-27) in `just verify`'s exact order, then `cargo xtask verify-docs`                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `rust`                           | `changes.rust`           | `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace`, `just test-doc`, `just verify-ignored`                                                                                                                                                                                                                                                                                                                                                              |
 | `deny` — _supply chain_          | `changes.deny`           | `EmbarkStudios/cargo-deny-action@v2`, `command: check`                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `web`                            | `changes.web`            | `just audit-web`, `just fmt-check-web`, `just lint-web`, `pnpm -r test`, `just build-storybook` (which also runs both apps' `a11y-gate.test.ts` against its artefact, since 2026-10-23, vaam-apps/vpay#355 and #349), `just test-storybook`                                                                                                                                                                                                                                                                                 |
@@ -188,12 +188,19 @@ The recipe runs `--audit-level=moderate`, so moderate advisories fail, and
 network**. Both have been true since 2026-09-11 (issue #103); the prose around
 them said the opposite until 2026-09-16.
 
-One thing #103 asked for is **not built**: a documented allowlist for an
+~~One thing #103 asked for is **not built**: a documented allowlist for an
 accepted advisory. `pnpm.auditConfig.ignoreCves` is absent from `package.json`
-and nothing is suppressed (checked 2026-09-16). So a moderate advisory in a
-transitive dev dependency blocks every merge with no sanctioned way to accept
-it — if you hit one, that is the state of things, not something you have
-misconfigured.
+and nothing is suppressed (checked 2026-09-16).~~ **Corrected 2026-11-17 —
+stale since 2026-10-09:** `pnpm-workspace.yaml`'s `auditConfig.ignoreGhsas`
+is the sanctioned way, one id per entry with a dated paragraph, the scope of
+exposure and a `REMOVE WHEN`. On `master` (`44b19d69`) it holds one,
+`GHSA-vfj7-8cjw-p6xm` (braces, maintainer decision 2026-10-09); vpay#402 adds
+`GHSA-fc5q-39xc-vjpf` (picomatch), **proposed, pending acceptance**. What #103
+asked for and is still not built is the _dated_ escape hatch — nothing expires
+an entry, so an accepted advisory stays green until someone removes it
+(`docs/flows/sdlc.md` says the same, [sdlc.md](sdlc.md)). Prefer an override
+that actually clears the advisory: vpay#400 cleared nine moderates that way on
+2026-11-17 with nothing ignored.
 
 Nothing in `ci.yml` itself retries anything.
 

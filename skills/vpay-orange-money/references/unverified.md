@@ -72,6 +72,18 @@ here at all.
 | 10  | **Whether `FAILED` carries a sub-reason under any field name**                                                                                                                                                                                     | Item 2 restated from the other side. MTN's equivalent question has a published answer — a seventeen-value `ErrorReason.code` enum — and comparing the adapter against it is what closed `payer_declined` on that rail                                                                                                                                                                                                                                                                                                                                                                                      |
 | 11  | **Whether the notification carries `order_id` at all** (added 2026-10-21, RFC-0013 § 11 item 3). `parse_callback` requires it; third-party sources say the body is `status`, `notif_token` and `txnid` only                                        | If so, every real Orange callback is a `400` and a `warn`, and the poll ladder settles the charge anyway: latency, not money. The repair is a design decision (the `notif_token` already kept in `ref_extra`, which nothing can look a charge up by today, or a reference in `notif_url`), not relaxing the check. `docs/flows/adapter-orange-money.md` item 11 has the sources; none that was read is Orange Cameroun                                                                                                                                                                                     |
 
+_Row 1, and what an error may print (pending in vpay#406, issue #147,
+2026-11-17):_ the raw body of that `Rejected{provider_error}` still reaches
+`charges.failure_raw`, but no longer the error's `Display`, which every log line
+and `jobs.last_error` render. Where a submit 5xx/404 or a status-query 5xx/4xx
+becomes `Transport`/`Config`/`Malformed`, the adapter parses
+`wire::ErrorEnvelope` (`code` and `message` only — `description`, the free
+text, is deliberately not a field) and prints the status, the body's length, a
+`code` only if `vpay_provider::http::rail_token` admits it, and `message` only
+if it is an HTTP reason phrase. `token_url` prints `base_url` through `SafeUrl`.
+Since row 1 is unknown, this envelope shape is the stubs' shape, not Orange's
+documented one.
+
 ## `notif_token` verification is unbuilt — in two places
 
 The adapter returns the received `notif_token` in `ref_extra` and **fails
@@ -129,6 +141,37 @@ How many seconds the chain is worth against the worker's own ladder is
 If the real page's window turns out to be minutes rather than seconds, **the
 thing that changes is the escalation in `docs/flows/reconciler.md`, not this
 adapter.**
+
+### Two stub fixes, 2026-11-17 (issue #106, vpay#402)
+
+Again about the stub, and not this adapter — no adapter, handler or ladder
+moved:
+
+- **The test-number form's hidden inputs are percent-encoded.**
+  `stub-hosted-page.json` wrote `value="{{request.query.return}}"`, and
+  WireMock 3.9.2 escapes no stache, so a `return_url` carrying `"` — which
+  `/v1`'s `checked_return_url` accepts — closed the attribute and injected into
+  the page. Both inputs are now `{{{urlEncode …}}}`, like the links, and `/pay`
+  is split on the presence of `msisdn` (only the form sends it): the links' arm
+  is unchanged, and the form's arm and `demo-outcomes.json`'s two test-number
+  arms answer `{{{urlEncode request.query.return decode=true}}}`, undoing the
+  layer a GET form adds. `a_hostile_return_url_survives_the_form_on_the_rails_page`
+  submits a URL with `"`, `<`, `&` and a space through the page's own form and
+  links and asserts each `302` lands on it byte for byte.
+- **Every payer action is priority 5** — `/pay` (both arms), `/cancel` (was 3)
+  and the `SUCCESS`/`EXPIRED` answers they arm — below every mapping in
+  `demo-outcomes.json` (3 and 4), so a click on one charge's page no longer
+  pays or expires a charge whose amount the demo steers (`5001`/`5002`).
+  `the_payers_actions_on_the_hosted_page_sit_below_every_demo_mapping` reads
+  both files and pins the ladder without a container;
+  `a_click_on_one_charges_page_does_not_decide_a_demo_amounts_charge` drives
+  the overlap against one. **If you add a payer-action mapping, give it
+  priority 5 or the first test fails.**
+- **Not fixable by a priority, and still open:** one scenario per container.
+  Two overlapping Orange charges share it, and a click on one page still
+  decides a charge steered by a test number typed on another. Nothing drives
+  two at once. No Cypress spec touches the form (they click `#pay`/`#cancel`),
+  so the browser half of the encoding fix is the conformance case.
 
 ## What _is_ proven, and by what
 

@@ -111,11 +111,13 @@ here or in vpay. It was twelve until 2026-09-17, thirteen on 2026-09-17
 (`verify-versions`, #201), fourteen from 2026-09-18 (`verify-privacy-inventory`,
 #187), **fifteen since 2026-09-20** (`verify-doc-counts`, #233) and
 **sixteen since 2026-10-26** (`verify-security-inventory`, issue #150,
-ADR-0034).
+ADR-0034), **seventeen since 2026-10-27** (`verify-mcp-parity`, vpay#377) and
+**eighteen since 2026-11-17** (`verify-adr-numbers`, vpay#397, issue #170).
 ~~It was fourteen until 2026-09-18~~ — this page said that, which has the dates
 backwards. `verify-doc-counts` now fails a vpay document whose marked count
-disagrees with the recipe. The recipe now lists seventeen targets: sixteen gates plus
-`verify-docs`, the report that never fails.
+disagrees with the recipe. The recipe now lists nineteen targets: eighteen gates plus
+`verify-docs`, the report that never fails. _(This said "seventeen targets:
+sixteen gates" until 2026-11-17, and had been stale since 2026-10-27.)_
 
 When you finish: `just ci`, then update the status page your change belongs to
 **in the same commit**, then the relevant `docs/flows/*.md` **Status** section.
@@ -207,6 +209,22 @@ _(This paragraph said "`/v1` takes no token" without that qualification from
 2026-10-27 until vpay#384 merged later that day.)_
 The merchant MCP endpoint (`/mcp/v1`, vpay#377, ADR-0033 Proposed) is new, and
 it is opt-in, so a default deployment does not serve it.
+
+**One breaking change and several provisional ones arrive on 2026-11-17**
+(vpay#404, issue #56/#152):
+`GET /v1/account_holders` and every refund that names a `destination` need the
+new scope `account_holders:read`, which no payment scope implies and which was
+enforced with no migration window; the lookup gained a per-credential rate
+limit and an append-only `audit_events` journal. Every value behind them is
+**PROVISIONAL pending RFC-0002 D3/D5/D6/D7/D9**, and the operator query surface
+(D8), the journal's retention handler (D9) and break-glass access are not
+built — `vpay-customers` has the table. The same day: a charge the rail paid
+after its intent was canceled is parked in a new `requires_review` state with
+no repair path yet (issue #96, `vpay-payments`); the popup completes on vpay's
+own message first (issue #65, `vpay-checkout`); the payer sees an invoice's
+number (issue #91); and two policy pages, `docs/flows/sdlc.md` and
+`docs/flows/emergency-changes.md`, describe controls that are largely practice
+rather than gates (issue #387, vpay#405, `vpay-tooling`).
 
 See also `references/reading-the-docs.md` — this repository's documentation has
 conventions that will mislead you if you do not know them, in particular why a
