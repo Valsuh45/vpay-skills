@@ -240,7 +240,7 @@ to."
 
 ## Legal entity refusals (exit 78, RFC-0009 Phase A1)
 
-| Variant | Cause & fix |
-|---|---|
-| `ConfigError::MerchantsWithoutLegalEntity` | Two or more distinct `merchant_id`s are configured without `deployment.legal_entity`. Set `deployment.legal_entity: { id: <company-id> }` and matching `legal_entity: <company-id>` on each `merchant_clients[]` entry. |
-| `ConfigError::MerchantOfAnotherLegalEntity` | A merchant's `legal_entity` is missing (when >=2 merchants are configured) or differs from `deployment.legal_entity.id`. Only projects of one company can share rail-level accounts until Phase B. |
+| Variant                                     | Cause & fix                                                                                                                                                                                                             |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ConfigError::MerchantsWithoutLegalEntity`  | Two or more distinct `merchant_id`s are configured without `deployment.legal_entity`. Set `deployment.legal_entity: { id: <company-id> }` and matching `legal_entity: <company-id>` on each `merchant_clients[]` entry. |
+| `ConfigError::MerchantOfAnotherLegalEntity` | A merchant's `legal_entity` is missing (when >=2 merchants are configured) or differs from `deployment.legal_entity.id`. Only projects of one company can share rail-level accounts until Phase B.                      |
