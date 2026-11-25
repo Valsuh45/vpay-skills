@@ -300,7 +300,9 @@ second.**
 ### `deployment.legal_entity` and `merchant_clients[].legal_entity` (RFC-0009 Phase A1)
 
 Until Phase B adds per-account rail credentials, all `merchant_clients` on one
-deployment share the deployment's rail-level accounts (`default`). To prevent
+deployment share the deployment's rail-level accounts. (Phase **A2** will record
+that shared account as `default` in `charges.provider_account_id`; Phase A1,
+which this section documents, creates no such column.) To prevent
 accidental aggregation across separate companies:
 
 - **Two or more distinct `merchant_id`s**: `deployment.legal_entity` (`{ id, name? }`)
